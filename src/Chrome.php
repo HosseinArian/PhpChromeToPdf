@@ -63,8 +63,12 @@ class Chrome
         $this->setArguments([
             '--headless' => '',
             '--disable-gpu' => '',
-            '--incognito' => '',
+            // '--incognito' => '',
             '--enable-viewport' => '',
+            '--run-all-compositor-stages-before-draw' => '',
+            '--print-to-pdf-no-header' => '',
+            '--hide-scrollbars' => '',
+            '--disable-translate' => '',
         ]);
 
         $this->setOutputDirectory($outputDirectory ?: sys_get_temp_dir());
@@ -86,7 +90,7 @@ class Chrome
     public function setBinaryPath($binaryPath)
     {
         $this->binaryPath = trim($binaryPath);
-        $this->abortIfChromeIsNotInstalled();
+        //$this->abortIfChromeIsNotInstalled();
     }
 
     /**
@@ -183,18 +187,20 @@ class Chrome
      */
     public function getScreenShot($imagePath = null)
     {
-        if ($imagePath && !strstr($imagePath, '.jpg') && !strstr($imagePath, '.png')) {
+        if ($imagePath && !preg_match('/\.jpg$/', $pdfPath) && !preg_match('/\.png$/', $pdfPath)) {
             $imagePath .= '.jpg';
         }
 
-        $screenshotPath = $imagePath ?: $this->outputDirectory . '/' . $this->getUniqueName('jpg');
+        $screenshotPath = $imagePath ?: $this->outputDirectory . DIRECTORY_SEPARATOR . $this->getUniqueName('jpg');
         $printArray = [
             '--screenshot=' => $screenshotPath,
         ];
 
         $allArguments = array_merge($printArray, $this->arguments);
         if (!$this->executeChrome($allArguments)) {
-            throw new Exception('An error occured while getting the image');
+            throw new Exception('Error #' . $this->command->getExitCode() . ' while creating screenshot: '
+                . $this->command->getError());
+
         }
 
         return $screenshotPath;
